@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Bulk User Management via CSV - CSM Membership
-Plugin URI: https://colettesnow.com/plugins/email_library/
+Plugin Name: Bulk User Management via CSV
+Plugin URI: https://colettesnow.com/plugins/csm_bulk_user_management
 Description: CSV user management addon
-Version: 0.1.0
+Version: 0.1
 Author: Colette Snow
 Author URI: https://colettesnow.com/
 Text Domain: csm_membership
@@ -402,10 +402,10 @@ class CSM_Membership_Bulk_Import {
         echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_firstname' value='".( isset($_POST["column_firstname"] ) ? intval( $_POST["column_firstname"] ) : 0 )."' style='width: 60px;'> Column number containing First Name</label></p>\n";
         echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_lastname' value='".( isset($_POST["column_lastname"] ) ? intval( $_POST["column_lastname"] ) : 0 )."' style='width: 60px;'> Column number containing Last Name</label></p>\n";
         echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_website' value='".( isset($_POST["column_website"] ) ? intval( $_POST["column_website"] ) : 0 )."' style='width: 60px;'> Column number containing Website</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_plan' value='".( isset($_POST["column_plan"]) ? intval( $_POST["column_plan"] ) : 0 )."' style='width: 60px;'> Column number containing Plan (Role)</label></p>\n";
+        echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_plan' value='".( isset($_POST["column_plan"]) ? intval( $_POST["column_plan"] ) : 0 )."' style='width: 60px;'> Column number containing Role</label></p>\n";
         echo "\t\t\t\t<p><label><select name='role'>";
         wp_dropdown_roles( ( isset($_POST["role"]) ? $_POST["role"] : get_option( "default_role" ) ) );
-        echo "</select> If plan not specified by above field or invalid, assign this plan (role).</label></p>\n";
+        echo "</select> If plan not specified by above field or invalid, assign this role.</label></p>\n";
         echo "\t\t\t\t<p><input type='submit' name='action' value='Import Users' class='button button-primary' /></p>\n";
         echo "\t\t\t</form>\n";
         echo "\t\t</div>\n";
