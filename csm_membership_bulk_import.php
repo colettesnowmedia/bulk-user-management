@@ -13,7 +13,7 @@ Domain Path: /languages
 class CSM_Membership_Bulk_Import {
 
     function __construct() {
-        add_action( "init", array( $this, "send_csv_download" ) );        
+        add_action( "init", array( $this, "send_csv_download" ) );
         add_action( "admin_menu", array( $this, "add_menu" ) );
         add_action( "admin_init", array( $this, "add_settings" ) );
     }
@@ -394,7 +394,7 @@ class CSM_Membership_Bulk_Import {
         echo "\t\t\t\t<p><label for='csv_file'>Please select the <abbr title='Comma Separated Value'>CSV</abbr> file containing your new users using the file picker below. Existing users will be updated unless disabled below in which case they will be skipped.</label></p>\n";
         echo "\t\t\t\t<p><input type='file' name='csv_file' id='csv_file' accept='.csv, .txt, text/csv, text/plain' required='required' /></p>\n";
         echo "\t\t\t\t<p><label><input type='number' size='1' value='".( isset( $_POST["column_username"]) ? intval( $_POST["column_username"]) : 1 )."' min='1' name='column_username' required='required' style='width: 60px;'> Column number containing Username</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='".( isset( $_POST["column_email"]) ? intval( $_POST["column_email"]) : 2 )."' min='1' name='column_email' required='required' style='width: 60px;'> Column number containing Email address</label></p>\n";        
+        echo "\t\t\t\t<p><label><input type='number' size='1' value='".( isset( $_POST["column_email"]) ? intval( $_POST["column_email"]) : 2 )."' min='1' name='column_email' required='required' style='width: 60px;'> Column number containing Email address</label></p>\n";
         echo "\t\t\t\t<p><label><input type='checkbox' name='has_headers' value='1' ".checked( 1, ( isset( $_POST["has_headers"] ) ? $_POST["has_headers"] : 1 ), false )." /> My CSV file has headers (skips the first row)</label></p>\n";
         echo "\t\t\t\t<p>The following fields are optional. Leave blank or 0 fields that your CSV does not contain.</p>\n";
         echo "\t\t\t\t<p><label><input type='checkbox' name='skip_existing' value='1' ".checked( 1, ( isset( $_POST["skip_existing"] ) ? $_POST["skip_existing"] : 0 ), false )." /> Disable existing user update (skips existing users)</label></p>\n";
@@ -407,15 +407,15 @@ class CSM_Membership_Bulk_Import {
         wp_dropdown_roles( ( isset($_POST["role"]) ? $_POST["role"] : get_option( "default_role" ) ) );
         echo "</select> If plan not specified by above field or invalid, assign this plan (role).</label></p>\n";
         echo "\t\t\t\t<p><input type='submit' name='action' value='Import Users' class='button button-primary' /></p>\n";
-        echo "\t\t\t</form>\n";        
+        echo "\t\t\t</form>\n";
         echo "\t\t</div>\n";
-        echo "\t\t<form method='post' action='admin.php?page=".esc_attr( $_GET["page"] )."'>\n";        
+        echo "\t\t<form method='post' action='admin.php?page=".esc_attr( $_GET["page"] )."'>\n";
         echo "\t\t\t<div class='card'>\n";
         echo "\t\t\t<h2 class='title'>Export Users</h2>\n";
         echo "\t\t\t<p><label><select name='role'><option value='-1'>All Users</option>";
         wp_dropdown_roles();
         echo "</select></label></p>\n";
-        echo "\t\t\t<p><input type='submit' name='action' value='Download Users (CSV)' class='button button-primary' /></p>\n";        
+        echo "\t\t\t<p><input type='submit' name='action' value='Download Users (CSV)' class='button button-primary' /></p>\n";
         echo "\t\t\t</div>\n";
         echo "\t\t</form>\n";
         echo "\t\t<div class='card'>\n";
@@ -424,7 +424,7 @@ class CSM_Membership_Bulk_Import {
         echo "\t\t\t\t<p><label for='csv_file'>Please select the <abbr title='Comma Separated Value'>CSV</abbr> file containing the users to delete using the file picker below.</label></p>\n";
         echo "\t\t\t\t<p><input type='file' name='csv_file' id='csv_file' accept='.csv, .txt, text/csv, text/plain' required='required' /></p>\n";
         echo "\t\t\t\t<p><label><input type='number' size='1' value='".( isset( $_POST["column_username"] ) ? intval( $_POST["column_username"] ) : 1 )."' min='1' name='column_username' required='required' style='width: 60px;'> Column number containing Username</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='".( isset( $_POST["column_email"] ) ? intval( $_POST["column_email"] ) : 2 )."' min='1' name='column_email' required='required' style='width: 60px;'> Column number containing Email address</label></p>\n";        
+        echo "\t\t\t\t<p><label><input type='number' size='1' value='".( isset( $_POST["column_email"] ) ? intval( $_POST["column_email"] ) : 2 )."' min='1' name='column_email' required='required' style='width: 60px;'> Column number containing Email address</label></p>\n";
         echo "\t\t\t\t<p><label><input type='checkbox' name='has_headers' value='1' ".checked( 1, ( isset( $_POST["has_headers"] ) ? $_POST["has_headers"] : 1 ), false )." /> My CSV file has headers (skips the first row)</label></p>\n";
         echo "\t\t\t\t<p><input type='submit' name='action' value='Delete Users' class='button button-primary' /></p>\n";
         echo "\t\t\t</form>\n";
@@ -447,7 +447,7 @@ class CSM_Membership_Bulk_Import {
 
             $fields = array();
             $fields["user_name"] = "Username";
-            $fields["user_email"] = "Email Address";                
+            $fields["user_email"] = "Email Address";
             $fields["first_name"] = "First Name";
             $fields["last_name"] = "Last Name";
             $fields["display_name"] = "Display Name";
@@ -457,7 +457,7 @@ class CSM_Membership_Bulk_Import {
 
             foreach ($users as $user) {
                 $rows[ $user->ID ]["user_name"] = $user->user_login;
-                $rows[ $user->ID ]["user_email"] = $user->user_email;                
+                $rows[ $user->ID ]["user_email"] = $user->user_email;
                 $rows[ $user->ID ]["first_name"] = $user->first_name;
                 $rows[ $user->ID ]["last_name"] = $user->last_name;
                 $rows[ $user->ID ]["display_name"] = $user->user_nicename;
