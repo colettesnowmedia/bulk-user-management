@@ -13,6 +13,8 @@ Domain Path: /languages
 class CSM_Membership_Bulk_Import {
 
     function __construct() {
+        register_activation_hook( __FILE__, array( $this, 'db_install' ));
+
         add_action( "init", array( $this, "send_csv_download" ) );
         add_action( "admin_menu", array( $this, "add_menu" ) );
         add_action( "admin_init", array( $this, "add_settings" ) );
@@ -70,6 +72,34 @@ class CSM_Membership_Bulk_Import {
     }
 
     function admin_import() {
+        global $wpdb;
+
+        if ( $_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['send_emails']))
+        {
+            ob_start();
+
+            $emails = $wpdb->get_results( 'SELECT * FROM '.$wpdb->prefix.'csm_bulk_emails LIMIT 0,'.absint( $_GET['send_emails'] ) );
+            foreach ( $emails as $email ) {
+                if (wp_mail($email->email_address, "Welcome to ".get_bloginfo( "name" ), $email->email_content, array('Content-Type: text/html; charset=UTF-8'))) {
+                    $wpdb->delete($wpdb->prefix.'csm_bulk_emails', array('ID' => $email->ID));
+                    echo "<p>Email to $email->email_address sent successfully.</p>";
+                } else {
+                    echo "<p>Emailing failed to $email->email_address.</p>";
+                }
+            }
+
+            $email_count = $wpdb->get_row('SELECT COUNT(ID) as the_count FROM '.$wpdb->prefix.'csm_bulk_emails LIMIT 1');
+            if ($email_count->the_count >= 1) {
+                echo "<script type='text/javascript'>location.reload();</script>";
+                echo "<p>If this page did not automatically refresh, please click <a href='admin.php?page=csm_bulk_user_management&amp;send_emails=".absint($_GET['send_emails'])."'>here</a>.</p>";
+            } else {
+                echo '<p>All welcome emails have been sent.</p>';
+            }
+
+            exit();
+            return;
+        }
+
         echo "<div class='wrap'>\n";
         echo "\t\t<h1 class='wp-heading-inline'>".__("Bulk User Management", "csm_membership")."</h1>\n\n";
 
@@ -274,8 +304,6 @@ class CSM_Membership_Bulk_Import {
 
                                 if ( $send_welcome == true ) {
                                     $to = $user[ $column_email ];
-                                    $subject = "Welcome to ".get_bloginfo( "name" );
-                                    $headers = array('Content-Type: text/html; charset=UTF-8');
 
                                     $welcome_email = str_replace( "(sitename)", get_bloginfo( "name" ), $welcome_msg );
                                     $welcome_email = str_replace( "(siteurl)", get_bloginfo( "url" ), $welcome_email );
@@ -286,11 +314,7 @@ class CSM_Membership_Bulk_Import {
                                     $welcome_email = str_replace( "(lastname)", $user[ $column_lastname ], $welcome_email );
                                     $welcome_email = wpautop( $welcome_email, true);
 
-                                    if ( wp_mail( $to, $subject, $welcome_email, $headers ) ) {
-                                        error_log( "email has been successfully sent to user whose email is " . $to );
-                                    } else {
-                                        error_log( "email failed to sent to user whose email is " . $to );
-                                    }
+                                    $wpdb->insert($wpdb->prefix.'csm_bulk_emails', array('user_id' => $user_id, 'email_address' => $user[ $column_email ], 'email_content' => $welcome_email), array('%d', '%s', '%s'));
                                 }
 
                                 unset( $user_id );
@@ -301,8 +325,18 @@ class CSM_Membership_Bulk_Import {
 
                     }
 
-                    echo "<div class='notice notice-success is-dismissible'><p>The users have been imported successfully. ".$new_count." users were created and ".$update_count." users were updated.</p></div>";
+                    if ( $send_welcome == true ) {
 
+                        echo "<p>We are currently sending welcome emails to the users that were just imported. Please don't leave this page until the below indicates the emailing is complete. This may take a long time.</p>";
+                        echo '<iframe src="admin.php?page='.esc_attr( $_GET['page'] ).'&amp;send_emails='.absint($_POST['max_send']).'" title="Sending emails" id="sending_emails" width="400" height="300">Frames are not supported in this browser. Please click <a href="" target="_blank">here</a> to send welcome emails.</iframe>';
+
+                        return;
+
+                    } else {
+
+                        echo "<div class='notice notice-success is-dismissible'><p>The users have been imported successfully. ".$new_count." users were created and ".$update_count." users were updated.</p></div>";
+
+                    }
                 }
 
             }
@@ -399,13 +433,14 @@ class CSM_Membership_Bulk_Import {
         echo "\t\t\t\t<p>The following fields are optional. Leave blank or 0 fields that your CSV does not contain.</p>\n";
         echo "\t\t\t\t<p><label><input type='checkbox' name='skip_existing' value='1' ".checked( 1, ( isset( $_POST["skip_existing"] ) ? $_POST["skip_existing"] : 0 ), false )." /> Disable existing user update (skips existing users)</label></p>\n";
         echo "\t\t\t\t<p><label><input type='checkbox' name='send_welcome' value='1' ".checked( 1, ( isset( $_POST["send_welcome"] ) ? $_POST["send_welcome"] : 0 ), false )." /> Send WordPress new user welcome email with password</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_firstname' value='".( isset($_POST["column_firstname"] ) ? intval( $_POST["column_firstname"] ) : 0 )."' style='width: 60px;'> Column number containing First Name</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_lastname' value='".( isset($_POST["column_lastname"] ) ? intval( $_POST["column_lastname"] ) : 0 )."' style='width: 60px;'> Column number containing Last Name</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_website' value='".( isset($_POST["column_website"] ) ? intval( $_POST["column_website"] ) : 0 )."' style='width: 60px;'> Column number containing Website</label></p>\n";
-        echo "\t\t\t\t<p><label><input type='number' size='1' value='0' min='0' name='column_plan' value='".( isset($_POST["column_plan"]) ? intval( $_POST["column_plan"] ) : 0 )."' style='width: 60px;'> Column number containing Role</label></p>\n";
+        echo "\t\t\t\t<p><label><input type='number' size='1' min='0' name='column_firstname' value='".( isset($_POST["column_firstname"] ) ? intval( $_POST["column_firstname"] ) : 0 )."' style='width: 60px;'> Column number containing First Name</label></p>\n";
+        echo "\t\t\t\t<p><label><input type='number' size='1' min='0' name='column_lastname' value='".( isset($_POST["column_lastname"] ) ? intval( $_POST["column_lastname"] ) : 0 )."' style='width: 60px;'> Column number containing Last Name</label></p>\n";
+        echo "\t\t\t\t<p><label><input type='number' size='1' min='0' name='column_website' value='".( isset($_POST["column_website"] ) ? intval( $_POST["column_website"] ) : 0 )."' style='width: 60px;'> Column number containing Website</label></p>\n";
+        echo "\t\t\t\t<p><label><input type='number' size='1' min='0' name='column_plan' value='".( isset($_POST["column_plan"]) ? intval( $_POST["column_plan"] ) : 0 )."' style='width: 60px;'> Column number containing Role</label></p>\n";
         echo "\t\t\t\t<p><label><select name='role'>";
         wp_dropdown_roles( ( isset($_POST["role"]) ? $_POST["role"] : get_option( "default_role" ) ) );
         echo "</select> If plan not specified by above field or invalid, assign this role.</label></p>\n";
+        echo "\t\t\t\t<p><label><input type='number' size='1' value='25' min='0' name='max_send' value='".( isset($_POST["max_send"]) ? intval( $_POST["max_send"] ) : 20 )."' style='width: 60px;'> Maximum number of welcome emails to send at once</label></p>\n";
         echo "\t\t\t\t<p><input type='submit' name='action' value='Import Users' class='button button-primary' /></p>\n";
         echo "\t\t\t</form>\n";
         echo "\t\t</div>\n";
@@ -490,6 +525,27 @@ class CSM_Membership_Bulk_Import {
             exit();
         }
     }
+
+    function db_install () {
+        global $wpdb;
+     
+        $table_name = $wpdb->prefix . "csm_bulk_email"; 
+
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+        ID int(11) NOT NULL AUTO_INCREMENT,
+        user_id int(11) NOT NULL,
+        email_address varchar(254) NOT NULL,
+        email_content text NOT NULL,
+        PRIMARY KEY  (ID)
+        ) $charset_collate;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
+
+        add_option( "csm_bulk_db_version", "0.1" );
+     }
 
 }
 
