@@ -469,6 +469,10 @@ class CSM_Bulk_User_Management {
     }
 
     function send_csv_download() {
+        if (!current_user_can('edit_users')) {
+            return 'You cannot access this page.';
+        }
+
         if ( isset( $_POST["action"] ) && $_POST["action"] == "Download Users (CSV)" ) {
 
             $args = array();

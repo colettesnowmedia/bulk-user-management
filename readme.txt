@@ -5,7 +5,7 @@ Tags: users, csv, backup, excel, edit, delete
 Requires at least: 3.0.1
 Tested up to: 4.9
 Requires PHP: 5.4
-Stable tag: 0.1
+Stable tag: 0.2
 License: Proprietary
 
 WordPress plugin to allow bulk importing, editing, and deleting of users via the use of CSV files.
@@ -47,3 +47,6 @@ Answer to foo bar dilemma.
  
 = 0.1 =
 * Initial release
+
+= 0.2 =
+* Restrict which users can download export
