@@ -32,7 +32,7 @@ class CSM_Bulk_User_Management {
         $welcome_msg = $this->get_default_welcome_msg();
 
         add_settings_section( "csm_users", "Bulk User Import User Options", function() { echo "<p>Customise the message sent to new users added by the CSV import.</p>"; }, "csm_users_opts" );
-        add_settings_field( "csm_users_welcome", "Welcome Message", function() { wp_editor( get_option( "csm_users_welcome", $welcome_msg ), "csm_users_welcome" ); }, "csm_users_opts", "csm_users" );
+        add_settings_field( "csm_users_welcome", "Welcome Message", function() { global $welcome_msg; wp_editor( get_option( "csm_users_welcome", $welcome_msg ), "csm_users_welcome" ); }, "csm_users_opts", "csm_users" );
 
         register_setting( "csm_users", "csm_users_welcome" );
     }
