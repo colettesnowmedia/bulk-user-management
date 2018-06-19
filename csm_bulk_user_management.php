@@ -25,7 +25,9 @@ class CSM_Bulk_User_Management {
 
         add_users_page( __( "Bulk User Management", "csm_membership" ), __( "Bulk User Management", "csm_membership" ), "edit_users", "csm_bulk_user_management", array( $this, "admin_import" ) );
         add_options_page( __( "Bulk User Options", "csm_membership" ), __( "Bulk User Options", "csm_membership" ), "manage_options", "csm_users_opts", array( $this, "user_settings_page" ) );
-        add_submenu_page( "css_members_admin", __("Bulk User Management", "csm_membership"), __( "Bulk User Management", "csm_membership" ), "edit_users", "csm_membership_bulk", array( $this, "admin_import" ) );
+        if (is_plugin_active('csm_membership/csm_membership.php')) {
+            add_submenu_page( "css_members_admin", __("Bulk User Management", "csm_membership"), __( "Bulk User Management", "csm_membership" ), "edit_users", "csm_bulk_user_management", array( $this, "admin_import" ) );
+        }
     }
 
     function add_settings() {
