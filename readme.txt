@@ -2,11 +2,11 @@
 Contributors: colettesnow
 Website: https://colettesnow.com
 Tags: users, csv, backup, excel, edit, delete
-Requires at least: 3.0.1
+Requires at least: 4.8
 Tested up to: 4.9
 Requires PHP: 5.4
-Stable tag: 0.2
-License: Proprietary
+Stable tag: 0.3
+License: GNU General Public License V3
 
 WordPress plugin to allow bulk importing, editing, and deleting of users via the use of CSV files.
 
@@ -50,3 +50,7 @@ Answer to foo bar dilemma.
 
 = 0.2 =
 * Restrict which users can download export
+
+= 0.3 =
+* Change License
+* Add LICENSE file
