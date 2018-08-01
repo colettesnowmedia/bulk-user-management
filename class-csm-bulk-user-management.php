@@ -401,8 +401,8 @@ class CSM_Bulk_User_Management {
 							return;
 
 						} else {
-
-							echo "<div class='notice notice-success is-dismissible'><p>" . esc_html__( 'The users have been imported successfully.', 'csm_membership' ) . ' ' . intval( $new_count ) . ' ' . esc_html__( 'users were created and', 'csm_membership' ) . ' ' . intval( $update_count ) . ' ' . esc_html__( 'users were updated.', 'csm_membership' ) . '</p></div>';
+							// translators: The first placeholder is the number of users created and the second is the number of existing user accounts updated.
+							echo "<div class='notice notice-success is-dismissible'><p>" . sprintf( esc_html__( 'The users have been imported successfully. %1$d users created and %2$d users were updated.', 'csm_membership' ), intval( $new_count ), intval( $update_count ) ) . '</p></div>';
 
 						}
 					}
@@ -491,8 +491,8 @@ class CSM_Bulk_User_Management {
 							}
 						}
 					}
-
-					echo "<div class='notice notice-success is-dismissible'><p>" . esc_html( $delete_count ) . ' ' . esc_html__( 'users have been deleted.', 'csm_membership' ) . '</p></div>';
+					// translators: first placeholder is number of users successfully deleted.
+					echo '<div class="notice notice-success is-dismissible"><p>' . sprintf( esc_html__( '%d users have been deleted.', 'csm_membership' ), intval( $delete_count ) ) . '</p></div>';
 
 				} else {
 
