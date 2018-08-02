@@ -5,6 +5,11 @@
  * @package csm-bulk-user-management
  */
 
+// If this file is called directly, abort.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
+
 /**
  * Main class of CSM Bulk User Management
  */
@@ -31,9 +36,6 @@ class CSM_Bulk_User_Management {
 
 		add_users_page( __( 'Bulk User Management', 'csm_membership' ), __( 'Bulk User Management', 'csm_membership' ), 'edit_users', 'csm-bulk-user-management', array( $this, 'admin_import' ) );
 		add_options_page( __( 'Bulk User Options', 'csm_membership' ), __( 'Bulk User Options', 'csm_membership' ), 'manage_options', 'csm-users-opts', array( $this, 'user_settings_page' ) );
-		if ( is_plugin_active( 'csm_membership/csm_membership.php' ) ) {
-			add_submenu_page( 'csm_members_admin', __( 'Bulk User Management', 'csm_membership' ), __( 'Bulk User Management', 'csm_membership' ), 'edit_users', 'csm-bulk-user-management', array( $this, 'admin_import' ) );
-		}
 	}
 
 	/**
@@ -321,6 +323,9 @@ class CSM_Bulk_User_Management {
 
 									$random_password = wp_generate_password( 12, false );
 									$user_id         = wp_create_user( $user[ $column_username ], $random_password, $user[ $column_email ] );
+									if ( ! is_wp_error( $user_id ) ) {
+										$cur_user = get_userdata( $user_id );
+									}
 
 									++$new_count;
 
