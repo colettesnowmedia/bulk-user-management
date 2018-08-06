@@ -9,7 +9,7 @@
  * Plugin Name: Bulk User Management via CSV
  * Plugin URI: https://colettesnow.com/products/bulk-user-management/
  * Description: CSV user management addon
- * Version: 0.2
+ * Version: 0.4
  * Author: Colette Snow
  * Author URI: https://colettesnow.com/
  * Text Domain: csm_membership
