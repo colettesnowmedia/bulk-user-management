@@ -650,12 +650,14 @@ class CSM_Bulk_User_Management {
 
 				if ( isset( $_POST['role'] ) && '-1' !== $_POST['role'] ) {
 					$role  = '%' . $wpdb->esc_like( sanitize_key( wp_unslash( $_POST['role'] ) ) ) . '%';
-					$users = $wpdb->get_results( $wpdb->prepare( 'SELECT ' . $wpdb->users . '.ID, ' . $wpdb->users . '.user_login, ' . $wpdb->users . '.user_email, ' . $wpdb->users . '.user_url, ' . $wpdb->users . '.display_name, meta2.meta_value AS first_name, meta3.meta_value AS last_name, meta1.meta_value AS user_roles FROM wp_users 
+					$users = $wpdb->get_results( $wpdb->prepare( 'SELECT ' . $wpdb->users . '.ID, ' . $wpdb->users . '.user_login, ' . $wpdb->users . '.user_email, ' . $wpdb->users . '.user_url, ' . $wpdb->users . '.display_name, meta2.meta_value AS first_name, meta3.meta_value AS last_name, meta1.meta_value AS user_roles
+					FROM ' . $wpdb->users . '
 					INNER JOIN ' . $wpdb->usermeta . ' AS meta1 ON meta1.user_id = wp_users.ID AND meta1.meta_key = "' . $wpdb->prefix . 'capabilities" AND meta1.meta_value LIKE %s
 					INNER JOIN ' . $wpdb->usermeta . ' as meta2 ON meta2.user_id = wp_users.ID AND meta2.meta_key = "first_name"
 					INNER JOIN ' . $wpdb->usermeta . ' as meta3 ON meta3.user_id = wp_users.ID AND meta3.meta_key = "last_name"', $role ) );
 				} else {
-					$users = $wpdb->get_results('SELECT ' . $wpdb->users . '.ID, ' . $wpdb->users . '.user_login, ' . $wpdb->users . '.user_email, ' . $wpdb->users . '.user_url, ' . $wpdb->users . '.display_name, meta2.meta_value AS first_name, meta3.meta_value AS last_name, meta1.meta_value AS user_roles FROM wp_users 
+					$users = $wpdb->get_results('SELECT ' . $wpdb->users . '.ID, ' . $wpdb->users . '.user_login, ' . $wpdb->users . '.user_email, ' . $wpdb->users . '.user_url, ' . $wpdb->users . '.display_name, meta2.meta_value AS first_name, meta3.meta_value AS last_name, meta1.meta_value AS user_roles
+					FROM ' . $wpdb->users . ' 
 					INNER JOIN ' . $wpdb->usermeta . ' AS meta1 ON meta1.user_id = ' . $wpdb->users . '.ID AND meta1.meta_key = "' . $wpdb->prefix . 'capabilities"
 					INNER JOIN ' . $wpdb->usermeta . ' as meta2 ON meta2.user_id = ' . $wpdb->users . '.ID AND meta2.meta_key = "first_name"
 					INNER JOIN ' . $wpdb->usermeta . ' as meta3 ON meta3.user_id = ' . $wpdb->users . '.ID AND meta3.meta_key = "last_name"');
