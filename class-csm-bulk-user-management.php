@@ -229,13 +229,13 @@ class CSM_Bulk_User_Management {
 									$user_data       = array();
 									$user_data['ID'] = $user_id;
 
-									if ( $user[ $column_email ] != $cur_user->user_email ) {
+									if ( $user[ $column_email ] !== $cur_user->user_email ) {
 										$update_user_required    = true;
 										$user_data['user_email'] = $user[ $column_email ];
 									}
 
 									if ( 0 !== $column_firstname ) {
-										if ( $cur_user->first_name != $user[ $column_firstname ] ) {
+										if ( $cur_user->first_name !== $user[ $column_firstname ] ) {
 											$update_user_required    = true;
 											$user_data['first_name'] = $user[ $column_firstname ];
 										}
@@ -292,7 +292,7 @@ class CSM_Bulk_User_Management {
 								if ( trim( $user[ $column_email ] ) !== '' ) {
 
 									// determine a username if username is blank.
-									if ( trim( $user[ $column_username ] ) == '' ) {
+									if ( trim( $user[ $column_username ] ) === '' ) {
 
 										// let's decide on a username from the data we have.
 										if ( 0 !== $column_firstname && '' !== $user[ $column_firstname ] ) {
@@ -442,15 +442,24 @@ class CSM_Bulk_User_Management {
 						echo '<p>' . esc_html__( 'Are you sure you want to delete the following users? If you have changed your mind for any of these users, uncheck the box:', 'csm_membership' ) . '</p>';
 						echo '<ul>';
 
+						$admins = $this->get_admins();
+
 						foreach ( $file as $row ) {
 							$user = explode( ',', $row );
 
-							$cur_user = get_user_by( 'email', $user[ $column_email ] );
-
 							// let's not delete admins.
-							if ( false === user_can( $cur_user, 'administrator' ) && false === user_can( $cur_user, 'super_admin' ) ) {
-								if ( false !== $cur_user ) {
-									echo "<li><label><input type='checkbox' name='user[]' value='" . absint( $cur_user->ID ) . "' checked='checked'> ID #" . absint( $cur_user->ID ) . ': ' . esc_html( $cur_user->user_login ) . ' &lt;' . esc_html( $cur_user->user_email ) . '&gt;</label></li>';
+							if ( false === in_array( $user[ $column_username ], $admins['usernames'], true ) && false === in_array( $user[ $column_email ], $admins['emails'], true ) ) {
+								if ( ! empty( $user [ $column_username ] ) && ! empty( $user [ $column_email ] ) ) {
+									$cur_user = $wpdb->get_row( $wpdb->prepare( 'SELECT ID FROM ' . $wpdb->users . ' WHERE user_login = %s AND user_email = %s LIMIT 1', $user[ $column_username ], $user[ $column_email ] ) );
+								} elseif ( ! empty( $user [ $column_username ] ) && empty( $user [ $column_email ] ) ) {
+									$cur_user = $wpdb->get_row( $wpdb->prepare( 'SELECT ID FROM ' . $wpdb->users . ' WHERE user_login = %s LIMIT 1', $user[ $column_username ] ) );
+								} elseif ( empty( $user [ $column_username ] ) && ! empty( $user [ $column_email ] ) ) {
+									$cur_user = $wpdb->get_row( $wpdb->prepare( 'SELECT ID FROM ' . $wpdb->users . ' WHERE user_email = %s LIMIT 1', $user[ $column_email ] ) );
+								} else {
+									$cur_user = null;
+								}
+								if ( null !== $cur_user ) {
+									echo "<li><label><input type='checkbox' name='user[]' value='" . absint( $cur_user->ID ) . "' checked='checked'> ID #" . absint( $cur_user->ID ) . ': ' . esc_html( $user[ $column_username ] ) . ' &lt;' . esc_html( $user[ $column_email ] ) . '&gt;</label></li>';
 								}
 							}
 						}
@@ -477,25 +486,80 @@ class CSM_Bulk_User_Management {
 				}
 			}
 
-			if ( isset( $_POST['action'] ) && 'Confirm Delete Users' === $_POST['action'] ) {
+			if ( ( isset( $_POST['action'] ) && 'Confirm Delete Users' === $_POST['action'] ) || ( isset( $_GET['process_delete'] ) && is_int( $_GET['process_delete'] ) ) ) { // WPCS: sanitization ok.
 
-				$delete_count = 0;
+				$delete_count  = 0;
+				$admins        = $this->get_admins();
+				$admin_user_id = get_current_user_id();
 
-				if ( isset( $_POST['user'] ) && is_array( $_POST['user'] ) && count( $_POST['user'] ) >= 1 ) { // WPCS: sanitization ok.
+				if ( isset( $_POST['user'] ) && is_array( $_POST['user'] ) ) {
+					$users_store  = $_POST['user']; // WPCS: sanitization ok.
+					$initial_post = true;
+				} elseif ( isset( $_GET['process_delete'] ) && is_numeric( $_GET['process_delete'] ) ) { // WPCS: sanitization ok.
+					$initial_post = false;
+					$users_store  = get_transient( 'delete_store_' . $admin_user_id . '_' . intval( $_GET['process_delete'] ) );
+					if ( false === $users_store ) {
+						$users_store = array();
+					}
+				}
 
-					foreach ( $_POST['user'] as $user_id ) { // WPCS: sanitization ok.
+				if ( count( $users_store ) >= 1 ) {
+
+					foreach ( $users_store as $user_id ) { // WPCS: sanitization ok.
 						$user_id = absint( $user_id );
 
-						// some final protection against deleting admins.
-						if ( false === user_can( $user_id, 'administrator' ) && false === user_can( $user_id, 'super_admin' ) ) {
+						if ( $delete_count <= 100 ) {
 
-							$delete = wp_delete_user( $user_id );
+							// some final protection against deleting admins.
+							if ( false === in_array( $user_id, $admins['user_id'], true ) ) {
 
-							if ( true === $delete ) {
-								++$delete_count;
+								$delete = wp_delete_user( $user_id );
+
+								if ( true === $delete ) {
+									++$delete_count;
+								}
+							}
+						} else {
+							if ( ! isset( $next_page ) ) {
+								$next_page = array();
+							}
+
+							if ( false === in_array( $user_id, $admins['user_id'], true ) ) {
+								$next_page[] = $user_id;
 							}
 						}
 					}
+
+					if ( isset( $next_page ) ) {
+						$next_run = array_chunk( $next_page, 100, true );
+
+						foreach ( $next_run as $id => $user_set ) {
+							set_transient( 'delete_store_' . $admin_user_id . '_' . ( $id + 1 ), $user_set, DAY_IN_SECONDS );
+						}
+					}
+
+					if ( ! isset( $_GET['process_delete'] ) ) {
+						$_GET['process_delete'] = 1;
+					}
+
+					$next_page_num = intval( $_GET['process_delete'] ) + 1;
+					$is_next_page  = get_transient( 'delete_store_' . $admin_user_id . '_' . $next_page_num );
+					if ( false !== $is_next_page ) {
+						$next_url  = admin_url( 'users.php?page=csm-bulk-user-management&amp;process_delete=' . $next_page_num );
+						$next_link = '<a href="' . esc_url( $next_url ) . '">' . esc_html__( 'click here' ) . '</a>';
+						?>
+					<script>
+						window.location.replace("<?php echo esc_url( $next_url ); ?>");
+					</script>
+						<?php // translators: placeholder is for click here link. ?>
+					<p><?php echo sprintf( esc_html__( 'The next page for deleting processing should have loaded automatically. If that did not happen, please %s to continue deleting the specified users.</p>' ), $next_link ); // WPCS: XSS ok. ?>
+						<?php
+					} else {
+						for ( $i = 0; $i <= $next_page_num; $i++ ) {
+							delete_transient( 'delete_store_' . $admin_user_id . '_' . $i );
+						}
+					}
+
 					// translators: first placeholder is number of users successfully deleted.
 					echo '<div class="notice notice-success is-dismissible"><p>' . sprintf( esc_html__( '%d users have been deleted.', 'csm_membership' ), intval( $delete_count ) ) . '</p></div>';
 
@@ -671,6 +735,72 @@ class CSM_Bulk_User_Management {
 		dbDelta( $sql );
 
 		add_option( 'csm_bulk_db_version', '0.1' );
+	}
+
+	/**
+	 * Retrieves list of admin usernames and email addresses.
+	 *
+	 * @return array containing usernames and email addresses of administrators.
+	 */
+	private function get_admins() {
+		global $wpdb;
+
+		$like_admin      = '%administrator%';
+		$like_superadmin = '%superadmin%';
+
+		$admin_query = $wpdb->get_results(
+			$wpdb->prepare( 'SELECT ' . $wpdb->usermeta . '.user_id, ' . $wpdb->usermeta . '.meta_value, ' . $wpdb->users . '.user_login, ' . $wpdb->users . '.user_email 
+				FROM ' . $wpdb->usermeta . '
+				INNER JOIN ' . $wpdb->users . ' ON ' . $wpdb->usermeta . '.user_id = ' . $wpdb->users . '.ID 
+				WHERE ' . $wpdb->usermeta . '.meta_key = "' . $wpdb->prefix . 'capabilities" 
+				AND ( ' . $wpdb->usermeta . '.meta_value LIKE %s OR ' . $wpdb->usermeta . '.meta_value LIKE %s )',
+				$like_admin,
+				$like_superadmin
+			)
+		);
+
+		$admin_list_u  = array();
+		$admin_list_id = array();
+		$admin_list_e  = array();
+
+		foreach ( $admin_query as $admin ) {
+			$user_roles = $this->parse_roles( $admin->meta_value );
+
+			if ( array_key_exists( 'administrator', $user_roles ) || array_key_exists( 'super_admin', $user_roles ) ) {
+				$admin_list_u[]  = $admin->user_login;
+				$admin_list_id[] = $admin->user_id;
+				$admin_list_e[]  = $admin->user_email;
+			}
+		}
+
+		return [
+			'usernames' => $admin_list_u,
+			'emails'    => $admin_list_e,
+			'user_id'   => $admin_list_id,
+		];
+
+	}
+
+	/**
+	 * Parses the roles user meta field and returns roles where it is being assigned as true
+	 *
+	 * @param string|array $roles Roles serialisation or array ( from wp_usermeta ).
+	 * @return array containing roles that the user has assigned.
+	 */
+	private function parse_roles( $roles ) {
+		if ( ! is_array( $roles ) ) {
+			$roles = unserialize( $roles );
+		}
+
+		$result = array();
+
+		foreach ( $roles as $role => $boolean ) {
+			if ( true === $boolean ) {
+				$result[ $role ] = $role;
+			}
+		}
+
+		return $result;
 	}
 
 }
